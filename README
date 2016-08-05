@@ -1,0 +1,13 @@
+Hi, here are the resources I used in order to get the APIs written.
+
+http://www.w3schools.com/js/js_if_else.asp
+http://www.w3schools.com/js/js_json.asp
+https://scotch.io/tutorials/use-expressjs-to-get-url-and-post-parameters
+https://expressjs.com/en/guide/writing-middleware.html
+http://expressjs.com/en/api.html
+http://www.w3schools.com/js/js_functions.asp
+https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction/
+
+Express Documentation: for handling client HTTP requests
+body-parser: for handling JSON payloads from client
+request: for sending HTTP requests
