@@ -7,14 +7,13 @@ var requestHTTP = require('request'); // HTTP client
 // for parsing application/json
 app.use(bodyParser.json());
 
-// your SmartCar API endpoint '/getVehicleInfo', name it whatever you want for the spec and provide documentation
-app.post('/getVehicleInfo', function(req, res) {
-  // setup POST request for GM API
+app.post('/vehicles/:id', function(req, res) {
+  // setup POST request for GM API VEHICLE INFO
   var options = {
     url: 'gmapi.azurewebsites.net/getVehicleInfoService',
     json: true
     body: {
-      id: req.body.id,
+      id: req.params.id,
       responseType: "JSON"
     }
   };
@@ -29,12 +28,53 @@ app.post('/getVehicleInfo', function(req, res) {
     
     if (response.statusCode == 200 || response.statusCode == 201) {
       vehicleData = body.data;
-      
-      // format data however you'd like, this is just a simple sample
-      for (var feature in vehicleData) {
-        console.log('Feature:', feature, ", Value:", vehicleData[feature]['value']); // in case you want to read the data
-        result['data'][feature] = vehicleData[feature]['value']; // store data in new structure
-      }
+      var obj = JSON.parse(body);
+			int numDoors = 2; //initialize it to 2
+			if(obj.data.fourDoorSedan.value) //if its 4 change it
+				numDoors = 4;
+			/*I went with init the doors to 2, in the case that both return false then you have some 
+			door number better than init to a value of 0.*/
+			result = '{ "vin" : "' +  obj.data.vin.value + '",' +
+									'"color" : "' +  obj.data.color.value + '",' +
+									'"doorCount" : ' +  numDoors + ',' +
+									'"driveTrain" : "' +  obj.data.driveTrain.value + '",' +
+								'}';
+		} else {
+      result.status = 500; // or whichever error code you think is relevant  
+    }
+  });
+  
+  // return new JSON object to client
+  res.json(result);
+});
+
+//DOOR STATUS
+app.post('/vehicles/:id/doors', function(req, res) {
+  // setup POST request for GM API FUEL/BATTERY LEVEL
+  var options = {
+    url: 'gmapi.azurewebsites.net/getSecurityStatusService',
+    json: true
+    body: {
+      id: req.params.id,
+      responseType: "JSON"
+    }
+  };
+
+  // execute POST request to GM API
+  requestHTTP.post(options, function(error, response, body) {
+    var doorData,
+        result = {
+          status: 200,
+          data: {'[' +
+					'{"location":"frontLeft","locked":"false" },' +
+					'{"location":"frontRight","locked":"false" }]'}
+        };
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      doorData = JSON.parse(body.data);
+			result.data[0].locked = doorData.data.doors.values[0].locked;
+			result.data[1].locked = doorData.data.doors.values[1].locked;
+
     } else {
       result.status = 500; // or whichever error code you think is relevant  
     }
@@ -43,3 +83,128 @@ app.post('/getVehicleInfo', function(req, res) {
   // return new JSON object to client
   res.json(result);
 });
+
+
+//FUEL LEVEL
+app.post('/vehicles/:id/fuel', function(req, res) {
+  // setup POST request for GM API
+  var options = {
+    url: 'gmapi.azurewebsites.net/getEnergyService',
+    json: true
+    body: {
+      id: req.params.id,
+      responseType: "JSON"
+    }
+  };
+
+  // execute POST request to GM API
+  requestHTTP.post(options, function(error, response, body) {
+    var fuelData,
+        result = {
+          status: 200,
+          data: {{"percent" : 0}}
+        };
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      fuelData = JSON.parse(body.data);
+			if(fuelData.tankLevel.type != "Null"){
+				result.data.percent = fuelData.tankLevel.value;
+			}
+    } else {
+      result.status = 500; // or whichever error code you think is relevant  
+    }
+  });
+  
+  // return new JSON object to client
+  res.json(result);
+});
+
+
+//BATTERY LEVEL
+app.post('/vehicles/:id/battery', function(req, res) {
+  // setup POST request for GM API
+  var options = {
+    url: 'gmapi.azurewebsites.net/getEnergyService',
+    json: true
+    body: {
+      id: req.params.id,
+      responseType: "JSON"
+    }
+  };
+
+  // execute POST request to GM API
+  requestHTTP.post(options, function(error, response, body) {
+    var batteryData,
+        result = {
+          status: 200,
+          data: {{"percent" : 0}}
+        };
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      batteryData = JSON.parse(body.data);
+			if(batteryData.batteryLevel.type != "Null"){
+				result.data.percent = batteryData.batteryLevel.value;
+			}
+
+   	  
+    } else {
+      result.status = 500; // or whichever error code you think is relevant  
+    }
+  });
+  
+  // return new JSON object to client
+  res.json(result);
+});
+
+
+//ENGINE VALUE
+app.post('/vehicles/:id/engine', function(req, res) {
+  // setup POST request for GM API
+	var act = "NULL";
+	var stat = 500;
+	if(req.body.action == "START"){
+		act = "START_VEHICLE";
+		stat = 200;
+	}
+ 	else if(req.body.action == "STOP"){
+		act = "STOP_VEHICLE";
+		stat = 200;
+	}
+	else{ //NULL
+		stat = 500;
+	}
+ 	var options = {
+    url: 'gmapi.azurewebsites.net/actionEngineService',
+    json: true
+    body: {
+      id: req.params.id,
+			action : act 
+      responseType: "JSON"
+    }
+  };
+
+  // execute POST request to GM API
+  requestHTTP.post(options, function(error, response, body) {
+    var engineStatus,
+        result = {
+          status: stat,
+          data: {{"status" : "NULL"}}
+        };
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      engineStatus = JSON.parse(body.data);
+			if(engineStatus.actionResult.status == "EXECUTED")
+				result.data.status = "success";
+			else
+				result.data.status = "error";
+      
+    } else {
+      result.status = 500; // or whichever error code you think is relevant  
+    }
+  });
+  
+  // return new JSON object to client
+  res.json(result);
+});
+
+
