@@ -4,13 +4,25 @@ var app = express();
 var bodyParser = require('body-parser');
 var requestHTTP = require('request'); // HTTP client
 
-var validIds = [1234, 1235];// you want to make sure that the calls are actually valid
+var validIds = [1234, 1235];// you said that the GM api is sketch, so Id suggest checking to see
+//if the IDS even fall within the scope before launching a query 
 
 // for parsing application/json
 app.use(bodyParser.json());
+function checkVldIds(id){
+	var vld = 0;
+	for(var i = 0; i <2 ; i++)
+		if(validIds[i] == id)
+			vld = 1;
+		return vld;
+}
 
 app.post('/vehicles/:id', function(req, res) {
   // setup POST request for GM API VEHICLE INFO
+	var stat_val = 200;
+	if(checkVldIds(re.params.id) == 0)
+		stat_val == 400;
+		
   var options = {
     url: 'gmapi.azurewebsites.net/getVehicleInfoService',
     json: true,
@@ -24,7 +36,7 @@ app.post('/vehicles/:id', function(req, res) {
   requestHTTP.post(options, function(error, response, body) {
     var vehicleData,
         result = {
-          status: 200,
+          status: stat_val,
 					responseType : "JSON",
           "data":[{"vin":"NULL", "color" : "NULL", "doorCount" : "NULL", "driveTrain" : "NULL"}]
         };
@@ -42,7 +54,10 @@ app.post('/vehicles/:id', function(req, res) {
 			result.data.doorCount = obj.data.doorCount.value;  
 			result.data.driveTrain = obj.data.driveTrain.value;  
 		} else {
-      result.status = 500; // or whichever error code you think is relevant  
+			if(stat_val == 400)
+      	result.status = 400; // or whichever error code you think is relevant  
+			else
+      	result.status = 500; // or whichever error code you think is relevant  
     }
   });
   
@@ -53,7 +68,11 @@ app.post('/vehicles/:id', function(req, res) {
 //DOOR STATUS
 app.post('/vehicles/:id/doors', function(req, res) {
   // setup POST request for GM API FUEL/BATTERY LEVEL
-  var options = {
+ 	var stat_val = 200;
+	if(checkVldIds(re.params.id) == 0)
+		stat_val == 400;
+
+ var options = {
     url: 'gmapi.azurewebsites.net/getSecurityStatusService',
     json: true,
     body: {
@@ -66,7 +85,7 @@ app.post('/vehicles/:id/doors', function(req, res) {
   requestHTTP.post(options, function(error, response, body) {
     var doorData,
         result = {
-          status: 200,
+          status: stat_val,
 					responseType : "JSON",
           "data":[{"location":"frontLeft","locked":"false"},
 					{"location":"frontRight","locked":"false" }]
@@ -78,7 +97,10 @@ app.post('/vehicles/:id/doors', function(req, res) {
 			result.data[1].locked = doorData.data.doors.values[1].locked;
 
     } else {
-      result.status = 500; // or whichever error code you think is relevant  
+ 			if(stat_val == 400)
+      	result.status = 400; // or whichever error code you think is relevant  
+			else
+ 			result.status = 500; // or whichever error code you think is relevant  
     }
   });
   
@@ -90,7 +112,11 @@ app.post('/vehicles/:id/doors', function(req, res) {
 //FUEL LEVEL
 app.post('/vehicles/:id/fuel', function(req, res) {
   // setup POST request for GM API
-  var options = {
+	var stat_val = 200;
+	if(checkVldIds(re.params.id) == 0)
+		stat_val == 400;
+	
+	var options = {
     url: 'gmapi.azurewebsites.net/getEnergyService',
     json: true,
     body: {
@@ -103,7 +129,7 @@ app.post('/vehicles/:id/fuel', function(req, res) {
   requestHTTP.post(options, function(error, response, body) {
     var fuelData,
         result = {
-          status: 200,
+          status: stat_val,
 					responseType : "JSON",
           "data": [{"percent" : 0}]
         };
@@ -115,9 +141,13 @@ app.post('/vehicles/:id/fuel', function(req, res) {
 			}
 			else{
 				//this means you asked for fuel for a battery based car
+				stat_val = 400;
 			}
     } else {
-      result.status = 500; // or whichever error code you think is relevant  
+			if(stat_val == 400)
+      	result.status = 400; // or whichever error code you think is relevant  
+			else
+      	result.status = 500; // or whichever error code you think is relevant  
     }
   });
   
@@ -129,7 +159,11 @@ app.post('/vehicles/:id/fuel', function(req, res) {
 //BATTERY LEVEL
 app.post('/vehicles/:id/battery', function(req, res) {
   // setup POST request for GM API
-  var options = {
+	var stat_val = 200;
+	if(checkVldIds(re.params.id) == 0)
+		stat_val == 400;
+
+	var options = {
     url: 'gmapi.azurewebsites.net/getEnergyService',
     json: true,
     body: {
@@ -142,7 +176,7 @@ app.post('/vehicles/:id/battery', function(req, res) {
   requestHTTP.post(options, function(error, response, body) {
     var batteryData,
         result = {
-          status: 200,
+          status: stat_val,
 					responseType : "JSON",
           "data": [{"percent" : 0}]
         };
@@ -153,12 +187,16 @@ app.post('/vehicles/:id/battery', function(req, res) {
 				result.data.percent = parseInt(batteryData.batteryLevel.value);
 			}
 			else{
-				//this means user asked for a battery for a fuel based thing
+				//this means user asked for a battery for a fuel based thingi
+				stat_val == 400;
 			}
 
    	  
     } else {
-      result.status = 500; // or whichever error code you think is relevant  
+			if(stat_val == 400)
+      	result.status = 400; // or whichever error code you think is relevant  
+			else
+      	result.status = 500; // or whichever error code you think is relevant  
     }
   });
   
@@ -170,6 +208,10 @@ app.post('/vehicles/:id/battery', function(req, res) {
 //ENGINE VALUE
 app.post('/vehicles/:id/engine', function(req, res) {
   // setup POST request for GM API
+	var stat_val = 200;
+	if(checkVldIds(re.params.id) == 0)
+		stat_val == 400;
+
 	var act = "NULL";
 	var stat = 500;
 	if(req.body.action == "START"){
@@ -181,7 +223,7 @@ app.post('/vehicles/:id/engine', function(req, res) {
 		stat = 200;
 	}
 	else{ //NULL
-		stat = 500;
+		stat_val = 400;
 	}
  	var options = {
     url: 'gmapi.azurewebsites.net/actionEngineService',
@@ -192,12 +234,11 @@ app.post('/vehicles/:id/engine', function(req, res) {
       responseType: "JSON"
     }
   };
-
   // execute POST request to GM API
   requestHTTP.post(options, function(error, response, body) {
     var engineStatus,
         result = {
-          status: stat,
+          status: stat_val,
 					responseType : "JSON",
           "data": [{"status" : "NULL"}]
         };
@@ -210,7 +251,10 @@ app.post('/vehicles/:id/engine', function(req, res) {
 				result.data.status = "error";
       
     } else {
-      result.status = 500; // or whichever error code you think is relevant  
+ 			if(stat_val == 400)
+      	result.status = 400; // or whichever error code you think is relevant  
+			else
+ 				result.status = 500; // or whichever error code you think is relevant  
     }
   });
   
