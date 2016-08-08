@@ -11,3 +11,7 @@ https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction/
 Express Documentation: for handling client HTTP requests
 body-parser: for handling JSON payloads from client
 request: for sending HTTP requests
+
+for writing the tests:
+
+https://codeforgeek.com/2015/07/unit-testing-nodejs-application-using-mocha/
