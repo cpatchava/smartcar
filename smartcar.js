@@ -4,6 +4,8 @@ var app = express();
 var bodyParser = require('body-parser');
 var requestHTTP = require('request'); // HTTP client
 
+var validIds = [1234, 1235];// you want to make sure that the calls are actually valid
+
 // for parsing application/json
 app.use(bodyParser.json());
 
@@ -11,7 +13,7 @@ app.post('/vehicles/:id', function(req, res) {
   // setup POST request for GM API VEHICLE INFO
   var options = {
     url: 'gmapi.azurewebsites.net/getVehicleInfoService',
-    json: true
+    json: true,
     body: {
       id: req.params.id,
       responseType: "JSON"
@@ -23,22 +25,22 @@ app.post('/vehicles/:id', function(req, res) {
     var vehicleData,
         result = {
           status: 200,
-          data: {}
+					responseType : "JSON",
+          "data":[{"vin":"NULL", "color" : "NULL", "doorCount" : "NULL", "driveTrain" : "NULL"}]
         };
     
     if (response.statusCode == 200 || response.statusCode == 201) {
       vehicleData = body.data;
       var obj = JSON.parse(body);
-			int numDoors = 2; //initialize it to 2
+			var numDoors = 2; //initialize it to 2
 			if(obj.data.fourDoorSedan.value) //if its 4 change it
 				numDoors = 4;
 			/*I went with init the doors to 2, in the case that both return false then you have some 
 			door number better than init to a value of 0.*/
-			result = '{ "vin" : "' +  obj.data.vin.value + '",' +
-									'"color" : "' +  obj.data.color.value + '",' +
-									'"doorCount" : ' +  numDoors + ',' +
-									'"driveTrain" : "' +  obj.data.driveTrain.value + '",' +
-								'}';
+			result.data.vin = obj.data.vin.value;  
+			result.data.color = obj.data.color.value;  
+			result.data.doorCount = obj.data.doorCount.value;  
+			result.data.driveTrain = obj.data.driveTrain.value;  
 		} else {
       result.status = 500; // or whichever error code you think is relevant  
     }
@@ -53,7 +55,7 @@ app.post('/vehicles/:id/doors', function(req, res) {
   // setup POST request for GM API FUEL/BATTERY LEVEL
   var options = {
     url: 'gmapi.azurewebsites.net/getSecurityStatusService',
-    json: true
+    json: true,
     body: {
       id: req.params.id,
       responseType: "JSON"
@@ -65,9 +67,9 @@ app.post('/vehicles/:id/doors', function(req, res) {
     var doorData,
         result = {
           status: 200,
-          data: {'[' +
-					'{"location":"frontLeft","locked":"false" },' +
-					'{"location":"frontRight","locked":"false" }]'}
+					responseType : "JSON",
+          "data":[{"location":"frontLeft","locked":"false"},
+					{"location":"frontRight","locked":"false" }]
         };
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -90,7 +92,7 @@ app.post('/vehicles/:id/fuel', function(req, res) {
   // setup POST request for GM API
   var options = {
     url: 'gmapi.azurewebsites.net/getEnergyService',
-    json: true
+    json: true,
     body: {
       id: req.params.id,
       responseType: "JSON"
@@ -102,13 +104,17 @@ app.post('/vehicles/:id/fuel', function(req, res) {
     var fuelData,
         result = {
           status: 200,
-          data: {{"percent" : 0}}
+					responseType : "JSON",
+          "data": [{"percent" : 0}]
         };
     
     if (response.statusCode == 200 || response.statusCode == 201) {
       fuelData = JSON.parse(body.data);
 			if(fuelData.tankLevel.type != "Null"){
-				result.data.percent = fuelData.tankLevel.value;
+				result.data.percent = parseInt(fuelData.tankLevel.value);
+			}
+			else{
+				//this means you asked for fuel for a battery based car
 			}
     } else {
       result.status = 500; // or whichever error code you think is relevant  
@@ -125,7 +131,7 @@ app.post('/vehicles/:id/battery', function(req, res) {
   // setup POST request for GM API
   var options = {
     url: 'gmapi.azurewebsites.net/getEnergyService',
-    json: true
+    json: true,
     body: {
       id: req.params.id,
       responseType: "JSON"
@@ -137,13 +143,17 @@ app.post('/vehicles/:id/battery', function(req, res) {
     var batteryData,
         result = {
           status: 200,
-          data: {{"percent" : 0}}
+					responseType : "JSON",
+          "data": [{"percent" : 0}]
         };
     
     if (response.statusCode == 200 || response.statusCode == 201) {
       batteryData = JSON.parse(body.data);
 			if(batteryData.batteryLevel.type != "Null"){
-				result.data.percent = batteryData.batteryLevel.value;
+				result.data.percent = parseInt(batteryData.batteryLevel.value);
+			}
+			else{
+				//this means user asked for a battery for a fuel based thing
 			}
 
    	  
@@ -175,10 +185,10 @@ app.post('/vehicles/:id/engine', function(req, res) {
 	}
  	var options = {
     url: 'gmapi.azurewebsites.net/actionEngineService',
-    json: true
+    json: true,
     body: {
       id: req.params.id,
-			action : act 
+			action : act, 
       responseType: "JSON"
     }
   };
@@ -188,7 +198,8 @@ app.post('/vehicles/:id/engine', function(req, res) {
     var engineStatus,
         result = {
           status: stat,
-          data: {{"status" : "NULL"}}
+					responseType : "JSON",
+          "data": [{"status" : "NULL"}]
         };
     
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -207,4 +218,7 @@ app.post('/vehicles/:id/engine', function(req, res) {
   res.json(result);
 });
 
+app.listen(3000, function(){
+	console.log('Running on 3000');
+});
 

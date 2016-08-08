@@ -1,0 +1,28 @@
+{
+  "name": "sc",
+  "version": "1.0.0",
+  "description": "Hi, here are the resources I used in order to get the APIs written.",
+  "main": "fuel.js",
+  "dependencies": {
+    "express": "^4.14.0",
+    "supertest": "^2.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^3.0.1",
+    "should": "^10.0.0",
+    "supertest": "^2.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cpatchava/smartcar.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cpatchava/smartcar/issues"
+  },
+  "homepage": "https://github.com/cpatchava/smartcar#readme"
+}
